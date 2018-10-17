@@ -12,19 +12,40 @@ class nreader():
         pass
 
     def readFile(self, file_name, directory=os.getcwd()):
+        """ Unzips the file, parses it, turns information into a structure. """
         self.file_name = file_name
         self.directory = directory
 
         self.unzipFiles()
+        self.parsePlistFiles(os.path.join(self.directory, file_name.split(".note")[0]))
 
     def unzipFiles(self):
         """ Unzip specified file to specified location """
         with zipfile.ZipFile(self.file_name, 'r') as fn:
             fn.extractall(self.directory)
     
-    def parsePlst(self):
-        pass
-    
+    def parsePlistFiles(self, d):
+        """ Parses the plist files """
+        for subdir, dirs, files in os.walk(d):
+
+            # Loop through the files
+            for f in files:
+                try:
+                    # Check extention on the file
+                    ext = f.split('.')[1]
+                    if ext == 'plist':
+
+                       # Open it and parse it
+                        try:
+                            with open(os.path.join(d,subdir, f), 'rb') as fp:
+                                print(os.path.join(d,subdir, f))
+                                pl = plistlib.load(fp)
+                        except plistlib.InvalidFileException:
+                            pass
+
+                except IndexError:
+                    pass
+
 
 def displayHelp():
     print ("Arguments:")
@@ -42,7 +63,7 @@ def main():
 
 def test():
     r = nreader()
-    r.readFile("testfile.note")
+    r.readFile("Notes chapter 3.3 to 3.4.note")
 
 
 if __name__ == "__main__":
