@@ -5,6 +5,7 @@ import plistlib
 import zipfile
 import os
 
+
 class nreader():
     """ Read and parse Notability format """
 
@@ -14,17 +15,18 @@ class nreader():
     def readFile(self, file_name, directory=os.getcwd()):
         """ Unzips the file, parses it, turns information into a structure. """
         self.file_name = file_name
-        self.directory = directory
+        self.directory = os.getcwd()
 
         self.unzipFiles()
-        self.parsePlistFiles(os.path.join(self.directory, file_name.split(".note")[0]))
+        # self.decodePlistFiles(os.path.join(self.directory, file_name.split(".note")[0]))
+        self.decodePlistFiles(self.directory)
 
     def unzipFiles(self):
         """ Unzip specified file to specified location """
         with zipfile.ZipFile(self.file_name, 'r') as fn:
             fn.extractall(self.directory)
-    
-    def parsePlistFiles(self, d):
+
+    def decodePlistFiles(self, d):
         """ Parses the plist files """
         for subdir, dirs, files in os.walk(d):
 
@@ -34,24 +36,32 @@ class nreader():
                     # Check extention on the file
                     ext = f.split('.')[1]
                     if ext == 'plist':
+                        print(f)
 
-                       # Open it and parse it
+                        # Open it and parse it
                         try:
-                            with open(os.path.join(d,subdir, f), 'rb') as fp:
-                                print(os.path.join(d,subdir, f))
-                                pl = plistlib.load(fp)
-                        except plistlib.InvalidFileException:
-                            pass
+                            with open(os.path.join(d, subdir, f), 'rb') as fp:
+                                fp.read(32)
+                                #print(os.path.join(d, subdir, f).replace("\\", "\\\\"))
+                                #pl = plistlib.load(fp, fmt=plistlib.FMT_BINARY)
+                                pl = plistlib.readPlist((os.path.join(d, subdir, f).replace("\\", "\\\\")))
+
+                                with open('output.xml', 'w') as o:
+                                    for line in pl:
+                                        o.write(line)
+                        except plistlib.InvalidFileException as e:
+                            print(e)
 
                 except IndexError:
                     pass
 
 
 def displayHelp():
-    print ("Arguments:")
-    print ("-h Display this help menu")
-    print ("-i Input file")
-    print ("-o Output file")
+    print("Arguments:")
+    print("-h Display this help menu")
+    print("-i Input file")
+    print("-o Output file")
+
 
 def main():
     # Get command line arguments
@@ -59,13 +69,14 @@ def main():
         displayHelp()
 
     for arg in sys.argv[1:]:
-        print (arg)
+        print(arg)
+
 
 def test():
     r = nreader()
-    r.readFile("Notes chapter 3.3 to 3.4.note")
+    r.readFile("test.note")
 
 
 if __name__ == "__main__":
-    #main()
+    # main()
     test()
